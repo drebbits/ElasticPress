@@ -537,7 +537,11 @@ class ElasticPress_CLI_Command extends WP_CLI_Command {
 
 		}
 
-		// @Todo Reindexing: Zero Downtime - I need to know here that index is done.
+		// @Todo Zero Downtime: I need to know here that index is done.
+		// When I do, do this:
+		// If it has a versioned index name, delete it
+		// Otherwise the classic index still exists, delete it.
+		// Atomically, add an alias to the new versioned index and delete the outgoing index
 
 		if ( ! $no_bulk ) {
 			$this->send_bulk_errors();
