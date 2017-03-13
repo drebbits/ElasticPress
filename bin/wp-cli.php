@@ -506,6 +506,7 @@ class ElasticPress_CLI_Command extends WP_CLI_Command {
 
 					if ( $no_bulk ) {
 						// index the posts one-by-one. not sure why someone may want to do this.
+						// @Todo Zero Downtime: Support for `ep_sync_post()`
 						$result = ep_sync_post( get_the_ID() );
 						
 						$this->reset_transient();
@@ -535,6 +536,8 @@ class ElasticPress_CLI_Command extends WP_CLI_Command {
 			$this->stop_the_insanity();
 
 		}
+
+		// @Todo Reindexing: Zero Downtime - I need to know here that index is done.
 
 		if ( ! $no_bulk ) {
 			$this->send_bulk_errors();

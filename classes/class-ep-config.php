@@ -129,6 +129,23 @@ class EP_Config {
 	}
 
 	/**
+	 * Zero Downtime: Revision 3 - Add a helper to get a versioned index name
+	 *
+	 * @param int $blog_id (optional) Blog ID. Defaults to current blog.
+	 * @since 2.3
+	 * @return string
+	 */
+	public function get_versioned_index_name( $blog_id = null ) {
+		$has_versioned_index_name = get_option( 'ep_versioned_index' , false );
+		if ( $has_versioned_index_name ) {
+			$index_name = $has_versioned_index_name;
+		} else {
+			$index_name = $this->get_index_name( $blog_id );
+		}
+		return apply_filters( 'ep_versioned_index_name', $index_name, $blog_id );
+	}
+
+	/**
 	 * Returns indexable post types for the current site
 	 *
 	 * @since 0.9
@@ -214,6 +231,10 @@ function ep_is_indexing_wpcli() {
 
 function ep_get_index_name( $blog_id = null ) {
 	return EP_Config::factory()->get_index_name( $blog_id );
+}
+
+function ep_get_versioned_index_name( $blog_id = null ) {
+	return EP_Config::factory()->get_versioned_index_name( $blog_id );
 }
 
 function ep_get_indexable_post_types() {

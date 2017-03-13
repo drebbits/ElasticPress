@@ -34,6 +34,7 @@ class EP_WP_Query_Integration {
 	 */
 	public function setup() {
 		// Ensure that we are currently allowing ElasticPress to override the normal WP_Query
+		// @Todo: Zero Downtime - Finally, remove this.
 		if ( ep_is_indexing() ) {
 			return;
 		}

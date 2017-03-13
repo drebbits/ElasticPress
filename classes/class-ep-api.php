@@ -495,6 +495,14 @@ class EP_API {
 
 		$index = ep_get_index_name();
 
+		/**
+		 * Zero Downtime: Revision 1 - Use a new index name to allow searches
+		 * to continue pulling data from the current index.
+		 *
+		 * @since 2.3
+		 */
+		$index .= '-' . time();
+
 		$request_args = array(
 			'body'    => json_encode( $mapping ),
 			'method'  => 'PUT',
@@ -506,6 +514,13 @@ class EP_API {
 
 		if ( ! is_wp_error( $request ) && 200 === wp_remote_retrieve_response_code( $request ) ) {
 			$response_body = wp_remote_retrieve_body( $request );
+
+			/**
+			 * Zero Downtime: Revision #2 - Add a site option for the newly added versioned index.
+			 *
+			 * @since 2.3
+			 */
+			update_site_option( 'ep_versioned_index', $index );
 
 			return json_decode( $response_body );
 		}
@@ -1853,7 +1868,7 @@ class EP_API {
 	 */
 	public function bulk_index_posts( $body ) {
 		// create the url with index name and type so that we don't have to repeat it over and over in the request (thereby reducing the request size)
-		$path = apply_filters( 'ep_bulk_index_post_request_path', trailingslashit( ep_get_index_name() ) . 'post/_bulk', $body );
+		$path = apply_filters( 'ep_bulk_index_post_request_path', trailingslashit( ep_get_versioned_index_name() ) . 'post/_bulk', $body );
 
 		$request_args = array(
 			'method'  => 'POST',
