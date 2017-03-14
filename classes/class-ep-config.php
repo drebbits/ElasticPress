@@ -21,6 +21,8 @@ class EP_Config {
 	 */
 	public $option_host = false;
 
+	public static $versioned_index_key = 'ep_versioned_index';
+
 	/**
 	 * Get a singleton instance of the class
 	 *
@@ -136,7 +138,7 @@ class EP_Config {
 	 * @return string
 	 */
 	public function get_versioned_index_name( $blog_id = null ) {
-		$has_versioned_index_name = get_option( 'ep_versioned_index' , false );
+		$has_versioned_index_name = get_option( '_tmp_' . EP_Config::$versioned_index_key, false );
 		if ( $has_versioned_index_name ) {
 			$index_name = $has_versioned_index_name;
 		} else {

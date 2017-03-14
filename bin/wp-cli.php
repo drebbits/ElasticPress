@@ -538,10 +538,37 @@ class ElasticPress_CLI_Command extends WP_CLI_Command {
 		}
 
 		// @Todo Zero Downtime: I need to know here that index is done.
-		// When I do, do this:
-		// If it has a versioned index name, delete it
-		// Otherwise the classic index still exists, delete it.
+
+
+		/**
+		 * Zero Downtime: Revision #4 - Flip current index to use the newly created (versioned) index.
+		 *
+		 * @Todo: Move this into it's own wrapper.
+		 *
+		 * @since 2.3
+		 */
+		// Get the tmp versioned index name,
+		$tmp_versioned_index = get_option(  '_tmp_' . EP_Config::$versioned_index_key, false );
+
+		// If it has a versioned index name,
+		$versioned_index = get_option( EP_Config::$versioned_index_key, false );
+		if ( $versioned_index ) {
+			// delete the versioned index
+			$outgoing_index = $versioned_index;
+		} else {
+			// Otherwise the classic index still exists,
+			// delete the classic index
+			$outgoing_index = ep_get_index_name();
+		}
+
 		// Atomically, add an alias to the new versioned index and delete the outgoing index
+		$index_switch = ep_switch_index( $tmp_versioned_index, $outgoing_index );
+
+		if ( $index_switch ) {
+			update_option( EP_Config::$versioned_index_key, $tmp_versioned_index );
+		}
+
+		//</ Zero Downtime: Revision #4 >//
 
 		if ( ! $no_bulk ) {
 			$this->send_bulk_errors();

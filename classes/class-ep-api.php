@@ -520,7 +520,7 @@ class EP_API {
 			 *
 			 * @since 2.3
 			 */
-			update_site_option( 'ep_versioned_index', $index );
+			update_site_option( '_tmp_' . EP_Config::$versioned_index_key, $index );
 
 			return json_decode( $response_body );
 		}
@@ -923,6 +923,73 @@ class EP_API {
 			return json_decode( $response_body );
 		}
 
+		return false;
+	}
+
+
+	/**
+	 * Switch indices to flip newly created index on and remove current index.
+	 *
+	 * @param string $new_index_name     New index to alias.
+	 * @param string $old_index_name     Old index to remove.
+	 *
+	 * @since 2.3
+	 * @return array|bool
+	 */
+	public function switch_index( $new_index_name, $old_index_name = null ) {
+
+		// Old index to remove
+		$old_index_name = ( null === $old_index_name ) ? ep_get_index_name() : sanitize_text_field( $old_index_name );
+
+		$es_version = $this->get_elasticsearch_version();
+
+		if ( empty( $es_version ) ) {
+			$es_version = apply_filters( 'ep_fallback_elasticsearch_version', '2.0' );
+		}
+
+		if ( ! $es_version || version_compare( $es_version, '5.0' ) < 0 ) {
+			// For Pre-5.x
+			$request_args = array( 'method' => 'PUT' );
+			$request = ep_remote_request( trailingslashit( $new_index_name ) . '_alias/' . ep_get_index_name(), apply_filters( 'ep_switch_index_request_args', $request_args ) );
+
+			if ( ! is_wp_error( $request )
+				&& ( 200 === wp_remote_retrieve_response_code( $request )
+				|| 404 === wp_remote_retrieve_response_code( $request ) )
+			) {
+				// Finally, delete old index if index is successfull added
+				$this->delete_index( $old_index_name );
+				return true;
+			}
+		} else {
+			// For 5.x
+			// @Todo Zero Downtime: Test needed for ES 5.0
+			$actions = array(
+				"actions" => array(
+					"add" => array( "index" => $new_index_name, "alias" => ep_get_index_name() ),
+					"remove_index" => array( "index" => $old_index_name ),
+				),
+			);
+
+			if ( function_exists( 'wp_json_encode' ) ) {
+				$encoded_actions = wp_json_encode( $actions );
+			} else {
+				$encoded_actions = json_encode( $actions );
+			}
+
+			$request_args = array(
+				'body'    => $encoded_actions,
+				'method' => 'POST'
+			);
+
+			$request = ep_remote_request( '/_aliases', apply_filters( 'ep_switch_index_request_args', $request_args ) );
+
+			if ( ! is_wp_error( $request )
+				&& ( 200 === wp_remote_retrieve_response_code( $request )
+				|| 404 === wp_remote_retrieve_response_code( $request ) )
+			) {
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -2424,6 +2491,10 @@ function ep_put_mapping() {
 
 function ep_delete_index( $index_name = null ) {
 	return EP_API::factory()->delete_index( $index_name );
+}
+
+function ep_switch_index( $new_index_name, $old_index_name = null ) {
+	return EP_API::factory()->switch_index( $new_index_name, $old_index_name );
 }
 
 function ep_format_args( $args ) {
