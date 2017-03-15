@@ -520,7 +520,7 @@ class EP_API {
 			 *
 			 * @since 2.3
 			 */
-			update_site_option( '_tmp_' . EP_Config::$versioned_index_key, $index );
+			update_option( '_tmp_' . EP_Config::$versioned_index_key, $index, false );
 
 			return json_decode( $response_body );
 		}
