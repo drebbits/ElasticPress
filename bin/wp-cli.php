@@ -179,9 +179,6 @@ class ElasticPress_CLI_Command extends WP_CLI_Command {
 
 				WP_CLI::line( sprintf( __( 'Adding mapping for site %d...', 'elasticpress' ), (int) $site['blog_id'] ) );
 
-				// Deletes index first
-				ep_delete_index();
-
 				$result = ep_put_mapping();
 
 				do_action( 'ep_cli_put_mapping', $args, $assoc_args );
@@ -196,9 +193,6 @@ class ElasticPress_CLI_Command extends WP_CLI_Command {
 			}
 		} else {
 			WP_CLI::line( __( 'Adding mapping...', 'elasticpress' ) );
-
-			// Deletes index first
-			$this->delete_index( $args, $assoc_args );
 
 			$result = ep_put_mapping();
 
