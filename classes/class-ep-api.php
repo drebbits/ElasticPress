@@ -949,20 +949,24 @@ class EP_API {
 
 		if ( ! $es_version || version_compare( $es_version, '5.0' ) < 0 ) {
 			// For Pre-5.x
+
+			// Add an alias to the new index
 			$request_args = array( 'method' => 'PUT' );
-			$request = ep_remote_request( trailingslashit( $new_index_name ) . '_alias/' . ep_get_index_name(), apply_filters( 'ep_switch_index_request_args', $request_args ) );
+			$request = ep_remote_request( trailingslashit( $new_index_name ) . '_alias/' . ep_get_index_name(), apply_filters( 'ep_switch_index_pre5_request_args', $request_args ) );
 
 			if ( ! is_wp_error( $request )
 				&& ( 200 === wp_remote_retrieve_response_code( $request )
 				|| 404 === wp_remote_retrieve_response_code( $request ) )
 			) {
-				// Finally, delete old index if index is successfull added
+				// Finally, delete the old index if alias is successful
 				$this->delete_index( $old_index_name );
 				return true;
 			}
 		} else {
 			// For 5.x
 			// @Todo Zero Downtime: Test needed for ES 5.0
+
+			// Atomically, add an alias to the new index and remove the old index.
 			$actions = array(
 				"actions" => array(
 					"add" => array( "index" => $new_index_name, "alias" => ep_get_index_name() ),
@@ -978,10 +982,10 @@ class EP_API {
 
 			$request_args = array(
 				'body'    => $encoded_actions,
-				'method' => 'POST'
+				'method'  => 'POST'
 			);
 
-			$request = ep_remote_request( '/_aliases', apply_filters( 'ep_switch_index_request_args', $request_args ) );
+			$request = ep_remote_request( '/_aliases', apply_filters( 'ep_switch_index_v5_request_args', $request_args ) );
 
 			if ( ! is_wp_error( $request )
 				&& ( 200 === wp_remote_retrieve_response_code( $request )
