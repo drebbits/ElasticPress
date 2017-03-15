@@ -520,7 +520,7 @@ class EP_API {
 			 *
 			 * @since 2.3
 			 */
-			update_option( '_tmp_' . EP_Config::$versioned_index_key, $index, false );
+			update_option( '_tmp_' . EP_Config::$versioned_index_key, $index );
 
 			return json_decode( $response_body );
 		}
@@ -950,17 +950,17 @@ class EP_API {
 		if ( ! $es_version || version_compare( $es_version, '5.0' ) < 0 ) {
 			// For Pre-5.x
 
-			// Add an alias to the new index
-			$request_args = array( 'method' => 'PUT' );
-			$request = ep_remote_request( trailingslashit( $new_index_name ) . '_alias/' . ep_get_index_name(), apply_filters( 'ep_switch_index_pre5_request_args', $request_args ) );
+			// Delete the index
+			$delete_index = $this->delete_index( $old_index_name );
 
-			if ( ! is_wp_error( $request )
-				&& ( 200 === wp_remote_retrieve_response_code( $request )
-				|| 404 === wp_remote_retrieve_response_code( $request ) )
-			) {
-				// Finally, delete the old index if alias is successful
-				$this->delete_index( $old_index_name );
-				return true;
+			if ( $delete_index ) {
+				// Add an alias to the new index
+				$request_args = array( 'method' => 'PUT' );
+				$request = ep_remote_request( trailingslashit( $new_index_name ) . '_alias/' . ep_get_index_name(), apply_filters( 'ep_switch_index_pre5_request_args', $request_args ) );
+
+				if ( ! is_wp_error( $request ) && ( 200 === wp_remote_retrieve_response_code( $request ) || 404 === wp_remote_retrieve_response_code( $request ) ) ) {
+					return true;
+				}
 			}
 		} else {
 			// For 5.x

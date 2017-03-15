@@ -554,7 +554,7 @@ class ElasticPress_CLI_Command extends WP_CLI_Command {
 		$index_switch = ep_switch_index( $tmp_versioned_index, $outgoing_index );
 
 		if ( $index_switch ) {
-			update_option( EP_Config::$versioned_index_key, $tmp_versioned_index, false );
+			update_option( EP_Config::$versioned_index_key, $tmp_versioned_index );
 		}
 
 		//</ Zero Downtime: Revision #4 >//
