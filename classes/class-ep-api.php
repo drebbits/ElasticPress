@@ -929,7 +929,53 @@ class EP_API {
 
 
 	/**
-	 * Switch indices to flip newly created index on and remove current index.
+	 * Set index to use or flip to another versioned index.
+	 *
+	 * @since 2.3
+	 * @return bool
+	 */
+	public function set_versioned_index() {
+		/**
+		 * Zero Downtime: Revision #4 - Flip current index to use the newly created (versioned) index.
+		 *
+		 * @since 2.3
+		 */
+		// Get the tmp versioned index name,
+		$tmp_versioned_index = get_option( '_tmp_' . EP_Config::$versioned_index_key, false );
+
+		/**
+		 * If it there's an existing versioned index
+		 */
+		// Prevent getting a staled data when memcached is enabled...
+		// happens when a data is deleted directly in the database.
+		wp_cache_delete( EP_Config::$versioned_index_key, 'options' );
+
+		$versioned_index = get_option( EP_Config::$versioned_index_key, false );
+		if ( $versioned_index ) {
+			$outgoing_index = $versioned_index;
+		} else {
+			// Otherwise the classic index still exists
+			$outgoing_index = ep_get_index_name();
+		}
+
+		// Switch active index to use the new one.
+		$index_switch = $this->switch_index( $tmp_versioned_index, $outgoing_index );
+
+		// Finally remove the temporary cache
+		delete_option( '_tmp_' . EP_Config::$versioned_index_key );
+
+		if ( $index_switch ) {
+			update_option( EP_Config::$versioned_index_key, $tmp_versioned_index, false );
+			return true;
+		}
+
+		//</ Zero Downtime: Revision #4 >//
+
+		return false;
+	}
+
+	/**
+	 * Switch index to flip the newly created index on and remove current index.
 	 *
 	 * @param string $new_index_name     New index to alias.
 	 * @param string $old_index_name     Old index to remove.
@@ -955,6 +1001,7 @@ class EP_API {
 			$delete_index = $this->delete_index( $old_index_name );
 
 			if ( $delete_index ) {
+
 				// Add an alias to the new index
 				$request_args = array( 'method' => 'PUT' );
 				$request = ep_remote_request( trailingslashit( $new_index_name ) . '_alias/' . ep_get_index_name(), apply_filters( 'ep_switch_index_pre5_request_args', $request_args ) );
@@ -986,15 +1033,14 @@ class EP_API {
 				'method'  => 'POST'
 			);
 
+			// Send the request
 			$request = ep_remote_request( '/_aliases', apply_filters( 'ep_switch_index_v5_request_args', $request_args ) );
 
-			if ( ! is_wp_error( $request )
-				&& ( 200 === wp_remote_retrieve_response_code( $request )
-				|| 404 === wp_remote_retrieve_response_code( $request ) )
-			) {
+			if ( ! is_wp_error( $request ) && ( 200 === wp_remote_retrieve_response_code( $request ) || 404 === wp_remote_retrieve_response_code( $request ) ) ) {
 				return true;
 			}
 		}
+
 		return false;
 	}
 
@@ -2500,6 +2546,10 @@ function ep_delete_index( $index_name = null ) {
 
 function ep_switch_index( $new_index_name, $old_index_name = null ) {
 	return EP_API::factory()->switch_index( $new_index_name, $old_index_name );
+}
+
+function ep_set_versioned_index() {
+	return EP_API::factory()->set_versioned_index();
 }
 
 function ep_format_args( $args ) {
