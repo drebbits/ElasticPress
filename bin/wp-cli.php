@@ -539,9 +539,15 @@ class ElasticPress_CLI_Command extends WP_CLI_Command {
 		 * @since 2.3
 		 */
 		// Get the tmp versioned index name,
-		$tmp_versioned_index = get_option(  '_tmp_' . EP_Config::$versioned_index_key, false );
+		$tmp_versioned_index = get_option( '_tmp_' . EP_Config::$versioned_index_key, false );
 
-		// If it has a versioned index name,
+		/**
+		 * If it there's an existing versioned index
+		 */
+		// Prevent getting a staled data when memcached is enabled...
+		// happens when a data is deleted directly in the database.
+		wp_cache_delete( EP_Config::$versioned_index_key, 'options' );
+
 		$versioned_index = get_option( EP_Config::$versioned_index_key, false );
 		if ( $versioned_index ) {
 			$outgoing_index = $versioned_index;
@@ -554,8 +560,11 @@ class ElasticPress_CLI_Command extends WP_CLI_Command {
 		$index_switch = ep_switch_index( $tmp_versioned_index, $outgoing_index );
 
 		if ( $index_switch ) {
-			update_option( EP_Config::$versioned_index_key, $tmp_versioned_index );
+			update_option( EP_Config::$versioned_index_key, $tmp_versioned_index, false );
 		}
+
+		// Finally remove the temporary cache
+		delete_option( '_tmp_' . EP_Config::$versioned_index_key );
 
 		//</ Zero Downtime: Revision #4 >//
 

@@ -518,9 +518,10 @@ class EP_API {
 			/**
 			 * Zero Downtime: Revision #2 - Add a site option for the newly added versioned index.
 			 *
+			 *
 			 * @since 2.3
 			 */
-			update_option( '_tmp_' . EP_Config::$versioned_index_key, $index );
+			update_option( '_tmp_' . EP_Config::$versioned_index_key, $index, false );
 
 			return json_decode( $response_body );
 		}
