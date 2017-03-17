@@ -426,8 +426,6 @@ class EP_Dashboard {
 				delete_site_option( 'ep_feature_auto_activated_sync' );
 			} else {
 				if ( ! apply_filters( 'ep_skip_index_reset', false, $index_meta ) ) {
-					ep_delete_index();
-
 					ep_put_mapping();
 				}
 
@@ -456,8 +454,6 @@ class EP_Dashboard {
 
 			if ( ! empty( $index_meta['start'] ) ) {
 				if ( ! apply_filters( 'ep_skip_index_reset', false, $index_meta ) ) {
-					ep_delete_index();
-
 					ep_put_mapping();
 				}
 			}
@@ -559,6 +555,9 @@ class EP_Dashboard {
 
 					delete_option( 'ep_index_meta' );
 				}
+
+				// This will flip the new index on adn delete the old index
+				ep_set_versioned_index();
 			}
 		} else {
 
