@@ -9,6 +9,7 @@ Zero Downtime
 - Dashboard indexing [100%]
 - Single site indexing (WPCLI/Dashboard) [100%]
 - Multisite indexing (WPCLI/Dashboard) [0%]
+- ES 5.0 [0%]
 - Add more scenarios that this feature is supporting/testing... [N/A]
 
 ##### TESTING/QA
