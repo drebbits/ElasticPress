@@ -546,7 +546,12 @@ class EP_Dashboard {
 
 						foreach ( $sites as $site ) {
 							switch_to_blog( $site['blog_id'] );
+
 							$indexes[] = ep_get_index_name();
+
+							// This will flip the new index on adn delete the old index
+							ep_set_versioned_index();
+
 							restore_current_blog();
 						}
 						
@@ -559,10 +564,10 @@ class EP_Dashboard {
 					$index_meta['offset'] = (int) $query->found_posts;
 
 					delete_option( 'ep_index_meta' );
-				}
 
-				// This will flip the new index on adn delete the old index
-				ep_set_versioned_index();
+					// This will flip the new index on adn delete the old index
+					ep_set_versioned_index();
+				}
 			}
 		} else {
 
